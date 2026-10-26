@@ -1,0 +1,14 @@
+# Virtual environments
+.venv/
+.venv312/
+.venv_local/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
