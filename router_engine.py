@@ -3,7 +3,7 @@ import json
 import re
 import numpy as np
 
-# Load lightweight embedding model (with ultra-fast char-ngram fallback if offline)
+# Load lightweight embedding model (with instant n-gram fallback)
 try:
     from sentence_transformers import SentenceTransformer
     _model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -12,7 +12,7 @@ except Exception:
     _model = None
     USE_ST = False
 
-LOCAL_MEMORY_CACHE = []  # Fallback if Redis container isn't running locally
+LOCAL_MEMORY_CACHE = []
 CACHE_KEY = "routemesh:semantic_cache_v1"
 SIMILARITY_THRESHOLD = 0.92
 
@@ -28,22 +28,18 @@ def compute_embedding(text: str) -> list[float]:
     if USE_ST and _model is not None:
         vec = _model.encode(clean, normalize_embeddings=True)
         return vec.tolist()
-    # Deterministic 256-dim character 3-gram hash embedding fallback
     vec = np.zeros(256, dtype=np.float32)
     padded = f"  {clean}  "
     for i in range(len(padded) - 2):
         gram = padded[i:i+3]
-        idx = hash(gram) % 256
-        vec[idx] += 1.0
+        vec[hash(gram) % 256] += 1.0
     norm = np.linalg.norm(vec)
     return (vec / norm).tolist() if norm > 0 else vec.tolist()
 
 def has_negation_flip(prompt_a: str, prompt_b: str) -> bool:
     tokens_a = set(re.findall(r"\b\w+\b", prompt_a.lower()))
     tokens_b = set(re.findall(r"\b\w+\b", prompt_b.lower()))
-    neg_a = bool(tokens_a & NEGATION_WORDS)
-    neg_b = bool(tokens_b & NEGATION_WORDS)
-    return neg_a != neg_b
+    return bool(tokens_a & NEGATION_WORDS) != bool(tokens_b & NEGATION_WORDS)
 
 def score_complexity(prompt: str) -> str:
     words = prompt.split()
@@ -58,7 +54,6 @@ async def evaluate_prompt(prompt: str, redis_client=None) -> dict:
     tier = score_complexity(prompt)
     query_vec = np.array(compute_embedding(prompt), dtype=np.float32)
 
-    # Fetch cached entries from Redis or local memory
     entries = []
     if redis_client is not None:
         try:

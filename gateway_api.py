@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from router_engine import evaluate_prompt, store_in_cache, LOCAL_MEMORY_CACHE, CACHE_KEY
 
 load_dotenv()
+load_dotenv(os.path.join(os.path.dirname(__file__), "dashboard-ui", ".env"))
 
 app = FastAPI(title="RouteMesh Proxy Gateway API", version="1.0.0")
 
@@ -25,22 +26,16 @@ CHAOS_OUTAGE_ACTIVE = False
 TELEMETRY_LOGS = []
 
 BENCHMARK_PROMPTS = [
-    # Pair 1 (Original + Paraphrased Cache Hit)
     "How do I reverse a singly linked list in Python?",
     "How do I reverse a singly linked list in Python?",
-    # Pair 2 (Negation Guard Test - Must NOT hit cache!)
     "Write a Python function to reverse a list without using recursion.",
-    # Pair 3 (Simple Fast Tier + Duplicate)
     "Summarize the benefits of semantic caching in one sentence.",
     "Summarize the benefits of semantic caching in one sentence.",
-    # Pair 4 (Complex Reasoning Tier)
     "Design a distributed rate-limiting algorithm in Python using Redis token buckets with concurrency safety.",
     "Design a distributed rate-limiting algorithm in Python using Redis token buckets with concurrency safety.",
-    # Pair 5 (Simple Extraction + Duplicate)
     "Convert the following text to JSON: Name=Aarav, Role=SRE, Status=Active",
     "Convert the following text to JSON: Name=Aarav, Role=SRE, Status=Active",
-    # Pair 6 (SQL Optimization)
-    "Optimize a PostgreSQL query that joins 3 large tables with百萬 rows anddebug deadlock issues."
+    "Optimize a PostgreSQL query that joins 3 large tables and debug deadlock issues."
 ]
 
 @app.on_event("startup")
@@ -51,8 +46,8 @@ async def startup():
         redis_client = aioredis.from_url(redis_url, decode_responses=True)
         await redis_client.ping()
         print("Connected to Redis successfully!")
-    except Exception as e:
-        print(f"Redis offline ({e}), using fast in-memory vector cache fallback.")
+    except Exception:
+        print("Using fast in-memory vector cache fallback.")
         redis_client = None
 
 class Message(BaseModel):
@@ -68,7 +63,7 @@ async def call_gemini(prompt: str, tier: str) -> tuple[str, str]:
     if not api_key:
         raise ValueError("Missing GEMINI_API_KEY")
     model_name = "gemini-2.5-flash" if tier == "fast" else "gemini-2.5-pro"
-    url = f"[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/){model_name}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
         resp.raise_for_status()
@@ -79,8 +74,8 @@ async def call_groq_fallback(prompt: str) -> tuple[str, str]:
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         await asyncio.sleep(0.18)
-        return f"[Groq Llama-3.1-8B Instant Failover Response]: Processed '{prompt[:50]}...' with zero downtime.", "groq/llama-3.1-8b-instant"
-    url = "[https://api.groq.com/openai/v1/chat/completions](https://api.groq.com/openai/v1/chat/completions)"
+        return f"[Groq Llama-3.1-8B Failover]: Handled '{prompt[:50]}...' with zero downtime.", "groq/llama-3.1-8b-instant"
+    url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {api_key}"}
     payload = {"model": "llama-3.1-8b-instant", "messages": [{"role": "user", "content": prompt}]}
     async with httpx.AsyncClient(timeout=8.0) as client:
