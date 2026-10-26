@@ -1,4 +1,5 @@
-import os, time, asyncio
+import os, time, asyncio, json
+from pathlib import Path
 from typing import List, Optional
 from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,18 +26,30 @@ redis_client: Optional[aioredis.Redis] = None
 CHAOS_OUTAGE_ACTIVE = False
 TELEMETRY_LOGS = []
 
-BENCHMARK_PROMPTS = [
-    "How do I reverse a singly linked list in Python?",
-    "How do I reverse a singly linked list in Python?",
-    "Write a Python function to reverse a list without using recursion.",
-    "Summarize the benefits of semantic caching in one sentence.",
-    "Summarize the benefits of semantic caching in one sentence.",
-    "Design a distributed rate-limiting algorithm in Python using Redis token buckets with concurrency safety.",
-    "Design a distributed rate-limiting algorithm in Python using Redis token buckets with concurrency safety.",
-    "Convert the following text to JSON: Name=Aarav, Role=SRE, Status=Active",
-    "Convert the following text to JSON: Name=Aarav, Role=SRE, Status=Active",
-    "Optimize a PostgreSQL query that joins 3 large tables and debug deadlock issues."
-]
+_BENCHMARK_FILE = Path(__file__).parent / "golden_benchmark_50.json"
+try:
+    _raw_benchmark = json.loads(_BENCHMARK_FILE.read_text(encoding="utf-8"))
+    _prompts_data = _raw_benchmark.get("prompts", []) if isinstance(_raw_benchmark, dict) else _raw_benchmark
+    BENCHMARK_PROMPTS: List[str] = [
+        item["prompt"] if isinstance(item, dict) and "prompt" in item else str(item)
+        for item in _prompts_data
+    ]
+    if len(BENCHMARK_PROMPTS) == 0:
+        raise ValueError("golden_benchmark_50.json must be a non-empty JSON array")
+except Exception as _e:
+    print(f"[RouteMesh] WARNING: Could not load golden_benchmark_50.json ({_e}). Falling back to 10 built-in prompts.")
+    BENCHMARK_PROMPTS = [
+        "How do I reverse a singly linked list in Python?",
+        "What is the best way to reverse a linked list using Python?",
+        "What are the benefits of semantic caching for LLM APIs?",
+        "Why is semantic caching useful when building LLM-powered applications?",
+        "How do I implement rate limiting in Redis using a token bucket algorithm?",
+        "Explain how to build a token bucket rate limiter with Redis.",
+        "Convert this to JSON: Name=Aarav, Role=SRE, Status=Active",
+        "Classify the sentiment of this review: The product arrived late and was damaged.",
+        "Design a distributed rate-limiting algorithm in Python using Redis token buckets with full concurrency safety.",
+        "Implement a thread-safe LRU cache in Python with O(1) get and put operations.",
+    ]
 
 @app.on_event("startup")
 async def startup():
