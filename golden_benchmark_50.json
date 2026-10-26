@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 [
   {
     "id": 1,
@@ -250,3 +251,410 @@
     "prompt": "Why does deploying Redis in the same cloud region as the API gateway reduce tail latency?"
   }
 ]
+=======
+{
+  "version": 1,
+  "prompts": [
+    {
+      "id": 1,
+      "prompt": "What is a REST API?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 2,
+      "prompt": "What is the difference between TCP and UDP?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 3,
+      "prompt": "How does DNS resolve a domain name?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 4,
+      "prompt": "What is semantic caching in an LLM gateway?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 5,
+      "prompt": "What is the purpose of a database index?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 6,
+      "prompt": "What is the difference between supervised and unsupervised learning?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 7,
+      "prompt": "What does a circuit breaker do in a distributed system?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 8,
+      "prompt": "What is the purpose of Docker containers?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 9,
+      "prompt": "How does a load balancer distribute incoming requests?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 10,
+      "prompt": "What is the difference between authentication and authorization?",
+      "group": "base",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 11,
+      "prompt": "What does a REST API do?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 1
+    },
+    {
+      "id": 12,
+      "prompt": "How do TCP and UDP differ?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 2
+    },
+    {
+      "id": 13,
+      "prompt": "What happens when DNS looks up a domain name?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 3
+    },
+    {
+      "id": 14,
+      "prompt": "How does semantic caching work in an LLM proxy?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 4
+    },
+    {
+      "id": 15,
+      "prompt": "Why do databases use indexes?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 5
+    },
+    {
+      "id": 16,
+      "prompt": "How does supervised learning differ from unsupervised learning?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 6
+    },
+    {
+      "id": 17,
+      "prompt": "Why are circuit breakers used in distributed systems?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 7
+    },
+    {
+      "id": 18,
+      "prompt": "Why are Docker containers used?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 8
+    },
+    {
+      "id": 19,
+      "prompt": "What does a load balancer do with incoming requests?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 9
+    },
+    {
+      "id": 20,
+      "prompt": "How are authentication and authorization different?",
+      "group": "paraphrase",
+      "expected_tier": "fast",
+      "expected_cache_hit": true,
+      "paraphrase_of": 10
+    },
+    {
+      "id": 21,
+      "prompt": "Explain the difference between a list and a tuple in Python.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 22,
+      "prompt": "What is the purpose of a virtual environment in Python?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 23,
+      "prompt": "Explain how a hash table stores and retrieves values.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 24,
+      "prompt": "What is the difference between HTTP and HTTPS?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 25,
+      "prompt": "Explain the purpose of version control in software development.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 26,
+      "prompt": "What is the difference between a process and a thread?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 27,
+      "prompt": "Explain how binary search works on a sorted array.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 28,
+      "prompt": "What is a foreign key in SQL?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 29,
+      "prompt": "Explain the difference between SQL and NoSQL databases.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 30,
+      "prompt": "What is the role of an API gateway in a microservices architecture?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 31,
+      "prompt": "What is a CDN and why do websites use one?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 32,
+      "prompt": "What is the difference between a stack and a queue?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 33,
+      "prompt": "Explain what overfitting means in machine learning.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 34,
+      "prompt": "What is the purpose of feature scaling in machine learning?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 35,
+      "prompt": "Explain the difference between classification and regression.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 36,
+      "prompt": "What is an embedding in a large language model application?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 37,
+      "prompt": "Explain how a cache can reduce API response latency.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 38,
+      "prompt": "What is a message queue used for?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 39,
+      "prompt": "Explain the difference between latency and throughput.",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 40,
+      "prompt": "What is the purpose of unit testing in software development?",
+      "group": "fast",
+      "expected_tier": "fast",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 41,
+      "prompt": "A service receives 1,000 requests per second. Its cache hit rate is 70 percent. Each cache miss triggers one model API call. How many model API calls occur per second, and what happens if the hit rate increases to 85 percent?",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 42,
+      "prompt": "An LLM gateway routes requests to a fast model costing $0.20 per million tokens and a reasoning model costing $2.00 per million tokens. Given 800 fast-tier requests averaging 500 tokens and 200 reasoning-tier requests averaging 1,000 tokens, calculate the total input-token cost.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 43,
+      "prompt": "A semantic cache uses cosine similarity with a threshold of 0.90. Three candidate prompts have similarity scores of 0.94, 0.87, and 0.91. Determine which candidates pass the threshold and explain why a high similarity score alone cannot guarantee that returning a cached answer is safe.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 44,
+      "prompt": "A service sends requests to Provider A. After five consecutive failures, its circuit breaker opens for 30 seconds. Explain how this affects incoming requests, what should happen after the timeout, and how a fallback provider can improve availability.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 45,
+      "prompt": "Design a URL shortener that must handle 10,000 writes per second and redirect with under 50 milliseconds of latency. Explain how you would generate unique short codes, choose a storage layer, and handle hot links that suddenly receive millions of visits.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 46,
+      "prompt": "A machine learning classifier has 95 percent accuracy on a dataset where only 5 percent of examples belong to the positive class. Explain why accuracy may be misleading and identify additional metrics suitable for evaluating the classifier.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 47,
+      "prompt": "A database query takes 800 milliseconds before indexing and 120 milliseconds after indexing. Calculate the percentage reduction in query latency and explain why an index may increase storage requirements or slow down writes.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 48,
+      "prompt": "An API gateway routes simple prompts to a fast model and complex prompts to a reasoning model. Explain how you would design an evaluation dataset, measure routing errors, and prevent complex requests from being incorrectly sent to the fast tier.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 49,
+      "prompt": "My async Python service deadlocks under load: two coroutines each hold one lock and wait for the other, and requests start timing out after a few minutes. Explain how to reproduce the problem, identify the lock ordering issue, and refactor the code to prevent it.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    },
+    {
+      "id": 50,
+      "prompt": "Two model providers have different latency and failure rates. Design a routing strategy that considers request complexity, provider availability, response latency, and API cost. Explain how you would test the strategy under simulated provider failures.",
+      "group": "reasoning",
+      "expected_tier": "reasoning",
+      "expected_cache_hit": false,
+      "paraphrase_of": null
+    }
+  ]
+}
+>>>>>>> 59c31cf259fecbf96ff16f0c9679f3942dfc4793

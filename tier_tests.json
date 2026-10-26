@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "prompt": "Prove that the square root of 2 is irrational.",
+      "expected_tier": "reasoning",
+      "why": "short but needs a proof"
+    },
+    {
+      "prompt": "Why does my async code deadlock?",
+      "expected_tier": "reasoning",
+      "why": "short debugging question"
+    },
+    {
+      "prompt": "Optimize this SQL query: SELECT * FROM orders o JOIN users u ON o.user_id = u.id WHERE u.country = 'IN';",
+      "expected_tier": "reasoning",
+      "why": "optimization task with code"
+    },
+    {
+      "prompt": "Design a URL shortener.",
+      "expected_tier": "reasoning",
+      "why": "short system design"
+    },
+    {
+      "prompt": "Explain the time complexity of merge sort and prove it is O(n log n).",
+      "expected_tier": "reasoning",
+      "why": "complexity + proof"
+    },
+    {
+      "prompt": "Debug this: ```python\nfor i in range(10)\n    print(i)\n```",
+      "expected_tier": "reasoning",
+      "why": "code block"
+    },
+    {
+      "prompt": "Write a friendly two-sentence email thanking my team for their hard work this quarter, and mention that we shipped on time and under budget.",
+      "expected_tier": "fast",
+      "why": "long-ish but simple writing"
+    },
+    {
+      "prompt": "Summarize this paragraph in one line: The quarterly report shows revenue grew modestly while costs stayed flat, and the team plans to hire two engineers next month to support the new product line.",
+      "expected_tier": "fast",
+      "why": "long input, simple task"
+    },
+    {
+      "prompt": "Translate 'good morning' to French.",
+      "expected_tier": "fast",
+      "why": "trivial"
+    },
+    {
+      "prompt": "Classify this review as positive or negative: 'Great battery, terrible screen.'",
+      "expected_tier": "fast",
+      "why": "classification"
+    },
+    {
+      "prompt": "What is the capital of Australia?",
+      "expected_tier": "fast",
+      "why": "trivial fact"
+    },
+    {
+      "prompt": "Convert this list to JSON: apple, banana, cherry.",
+      "expected_tier": "fast",
+      "why": "formatting"
+    }
+  ]
+}
