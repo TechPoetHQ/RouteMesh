@@ -7,9 +7,7 @@ from pydantic import BaseModel
 import httpx
 import redis.asyncio as aioredis
 from dotenv import load_dotenv
-
-# Import functions from your teammate's file (Builder 1)
-from router_engine import evaluate_prompt, save_to_cache, LOCAL_MEMORY_CACHE, CACHE_KEY
+from router_engine import evaluate_prompt, store_in_cache, LOCAL_MEMORY_CACHE, CACHE_KEY
 
 load_dotenv()
 load_dotenv(os.path.join(os.path.dirname(__file__), "dashboard-ui", ".env"))
@@ -78,7 +76,7 @@ async def call_gemini(prompt: str, tier: str) -> tuple[str, str]:
     if not api_key:
         raise ValueError("Missing GEMINI_API_KEY")
     model_name = "gemini-2.5-flash" if tier == "fast" else "gemini-2.5-pro"
-    url = f"https://googleapis.com{model_name}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
         resp.raise_for_status()
@@ -90,7 +88,7 @@ async def call_groq_fallback(prompt: str) -> tuple[str, str]:
     if not api_key:
         await asyncio.sleep(0.18)
         return f"[Groq Llama-3.1-8B Failover]: Handled '{prompt[:50]}...' with zero downtime.", "groq/llama-3.1-8b-instant"
-    url = "https://groq.com"
+    url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {"Authorization": f"Bearer {api_key}"}
     payload = {"model": "llama-3.1-8b-instant", "messages": [{"role": "user", "content": prompt}]}
     async with httpx.AsyncClient(timeout=8.0) as client:
@@ -104,12 +102,7 @@ async def chat_completions(req: ChatRequest, x_force_failover: Optional[bool] = 
     start = time.perf_counter()
     prompt = req.messages[-1].content
 
-    try:
-        decision = await evaluate_prompt(prompt, redis_client)
-    except Exception as e:
-        print(f"[RouteMesh Error] Evaluation failed: {e}")
-        decision = {"cache_hit": False, "tier": "fast", "vec": []}
-
+    decision = await evaluate_prompt(prompt, redis_client)
     tier = decision.get("tier", "fast")
 
     if decision.get("cache_hit") and decision.get("cached_response"):
@@ -136,21 +129,11 @@ async def chat_completions(req: ChatRequest, x_force_failover: Optional[bool] = 
         if CHAOS_OUTAGE_ACTIVE or x_force_failover:
             raise RuntimeError("Simulated HTTP 429 Provider Rate Limit")
         reply_text, model_used = await call_gemini(prompt, tier)
-    except Exception as gemini_err:
-        print(f"[RouteMesh Warning] Gemini failed/intercepted: {gemini_err}. Re-routing...")
+    except Exception:
         failover_triggered = True
-        try:
-            reply_text, model_used = await call_groq_fallback(prompt)
-        except Exception as groq_err:
-            print(f"[RouteMesh Critical Error] Both models failed: {groq_err}")
-            reply_text = "[Gateway Error]: Live AI processing services are currently unreachable."
-            model_used = "error-fallback"
+        reply_text, model_used = await call_groq_fallback(prompt)
 
-    try:
-        vector_data = decision.get("vec", [])
-        await save_to_cache(prompt, vector_data, reply_text, redis_client)
-    except Exception as cache_save_err:
-        print(f"[RouteMesh Warning] Could not save entry to cache: {cache_save_err}")
+    await store_in_cache(prompt, reply_text, redis_client)
 
     latency_ms = round((time.perf_counter() - start) * 1000, 2)
     est_cost = 0.0002 if (tier == "fast" or failover_triggered) else 0.0020
@@ -197,7 +180,6 @@ async def run_benchmark():
         results.append(res["routemesh_meta"])
     return {"benchmark_completed": len(results), "results": results}
 
-# Exposing stats endpoint
 @app.get("/api/stats")
 async def get_stats():
     total = len(TELEMETRY_LOGS)
@@ -207,8 +189,6 @@ async def get_stats():
     baseline_spend = round(sum(x["baseline_cost_usd"] for x in TELEMETRY_LOGS), 4)
     saved = round(baseline_spend - actual_spend, 4)
     avg_lat = round(sum(x["total_latency_ms"] for x in TELEMETRY_LOGS) / total, 1) if total else 0.0
-    
-    # FIXED: Blended your exact telemetry metadata requirements seamlessly
     return {
         "total_requests": total,
         "cache_hits": hits,
