@@ -1,92 +1,616 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RouteMesh — Prompt Router</title>
-  <style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RouteMesh</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f5f6f7;
+    --panel: #ffffff;
+    --hover: #eef0f2;
+    --line: #dcdfe3;
+    --ink: #16191d;
+    --muted: #636b74;
+    --cheap: #23804f;
+    --exp: #a8650a;
+    --bad: #c0392b;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
     :root {
-      color-scheme: light dark;
-      --bg: #f4f7fa; --surface: #fff; --text: #172331;
-      --muted: #5e6d7c; --line: #d9e1e9; --accent: #087e9b;
-      --soft: #e2f4f8; --error: #b42318;
+      --bg: #101214;
+      --panel: #181b1f;
+      --hover: #20242a;
+      --line: #2b3036;
+      --ink: #e7e9ec;
+      --muted: #8d959e;
+      --cheap: #55c086;
+      --exp: #e0a24a;
+      --bad: #ff8f84;
     }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#101820; --surface:#18232e; --text:#e6edf3; --muted:#a0afbd; --line:#2b3a48; --accent:#64c9e0; --soft:#163844; --error:#ff938b; }
-    }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
-    main { width:min(900px, 100%); margin:auto; padding:30px 18px 50px; }
-    h1 { margin:0 0 4px; font-size:1.8rem; }
-    .sub { margin:0 0 22px; color:var(--muted); }
-    textarea { width:100%; min-height:135px; resize:vertical; padding:13px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text); font:14px/1.5 ui-monospace,Consolas,monospace; }
-    button { cursor:pointer; border:1px solid var(--line); border-radius:9px; padding:9px 13px; background:var(--surface); color:var(--text); font:inherit; }
-    button:hover { border-color:var(--accent); }
-    button.primary { background:var(--accent); border-color:var(--accent); color:white; font-weight:650; padding:10px 18px; }
-    .row { display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin:10px 0 18px; }
-    .label { color:var(--muted); font-size:.87rem; margin:16px 0 7px; }
-    .chip { font-size:.85rem; }
-    .card { margin-top:20px; padding:19px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
-    [hidden] { display:none !important; }
-    .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:13px; margin:15px 0; }
-    .metric { padding:12px; background:var(--bg); border-radius:9px; min-width:0; }
-    .k { font-size:.82rem; color:var(--muted); }
-    .v { font-size:1.05rem; font-weight:650; overflow-wrap:anywhere; }
-    .pill { display:inline-block; background:var(--soft); color:var(--accent); border-radius:99px; padding:3px 10px; font-size:.85rem; font-weight:650; }
-    .answer { white-space:pre-wrap; overflow-wrap:anywhere; padding:14px; background:var(--bg); border-radius:9px; }
-    .answer code { font-family:ui-monospace,Consolas,monospace; }
-    ul { padding-left:22px; color:var(--muted); }
-    .error { color:var(--error); white-space:pre-wrap; }
-    .muted { color:var(--muted); font-size:.88rem; }
-    .bar { height:8px; margin-top:7px; border-radius:99px; overflow:hidden; background:var(--line); }
-    .bar i { display:block; height:100%; width:0; background:var(--accent); }
-    button:disabled { opacity:.6; cursor:wait; }
-  </style>
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.55 var(--sans); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:disabled { opacity: .55; cursor: wait; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  h2 { margin: 0 0 8px; font-size: 1rem; font-weight: 650; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+
+  /* top bar */
+  .top { display: flex; align-items: center; gap: 28px; padding: 0 24px; height: 52px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 1.05rem; font-weight: 700; }
+  .brand svg { width: 22px; height: 22px; }
+  .tabs { display: flex; gap: 4px; height: 100%; }
+  .tab { height: 100%; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+  .status { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 4px 0; border: 0; background: none; color: var(--muted); font-size: .85rem; }
+  .status:hover { color: var(--ink); }
+  .status i { width: 8px; height: 8px; background: var(--muted); }
+  .status[data-state="online"] i { background: var(--cheap); }
+  .status[data-state="offline"] i { background: var(--bad); }
+
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 24px 72px; }
+
+  /* buttons and links */
+  .btn { padding: 8px 16px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
+  .btn:hover:not(:disabled) { border-color: var(--ink); }
+  .btn.solid { border-color: var(--ink); background: var(--ink); color: var(--bg); font-weight: 600; }
+  .btn.solid:hover:not(:disabled) { opacity: .88; }
+  .link { padding: 0; border: 0; background: none; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--muted); }
+  .link:hover { text-decoration-color: currentColor; }
+
+  /* router view */
+  .router { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 36px; align-items: start; }
+  label { display: block; margin-bottom: 6px; font-weight: 650; }
+  textarea { display: block; width: 100%; min-height: 190px; resize: vertical; padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); color: var(--ink); font: 13px/1.55 var(--mono); }
+  textarea:focus { border-color: var(--ink); }
+  textarea::placeholder { color: var(--muted); }
+  .formrow { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 10px; }
+  .hint { color: var(--muted); font-size: .8rem; }
+  #status { min-height: 1.3em; margin-top: 8px; color: var(--muted); font-size: .85rem; }
+  .examples { margin-top: 22px; }
+  .examples ul { margin: 0; padding: 0; list-style: none; }
+  .examples li { padding: 6px 0; border-top: 1px solid var(--line); }
+  .examples li:last-child { border-bottom: 1px solid var(--line); }
+  .examples .link { text-decoration: none; text-align: left; }
+  .examples .link:hover { text-decoration: underline; }
+
+  .errbox { padding: 2px 0 2px 14px; border-left: 3px solid var(--bad); }
+  .errbox h2 { color: var(--bad); }
+  .errbox .msg { margin-bottom: 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .errbox ul { margin: 0; padding-left: 18px; color: var(--muted); }
+
+  #result { --tier: var(--muted); }
+  #result[data-tier="cheap"] { --tier: var(--cheap); }
+  #result[data-tier="expensive"] { --tier: var(--exp); }
+  .facts { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); margin: 0 0 26px; border-top: 1px solid var(--line); }
+  .facts dt, .facts dd { margin: 0; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .facts dt { color: var(--muted); }
+  .facts dd { overflow-wrap: anywhere; }
+  .sq { display: inline-block; width: 9px; height: 9px; margin-right: 7px; background: var(--tier); }
+  #tier { color: var(--tier); font-weight: 650; }
+  .conf { display: inline-block; width: 120px; height: 5px; margin-left: 10px; vertical-align: middle; background: var(--line); }
+  .conf i { display: block; height: 100%; width: 0; background: var(--tier); }
+  .ans-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .ans-head h2 { margin: 0; }
+  .answer { padding: 14px 16px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); overflow-wrap: anywhere; }
+  .answer .text { white-space: pre-wrap; max-width: 76ch; }
+  .answer .text + .code, .answer .code + .text, .answer .text + .text { margin-top: 12px; }
+  .answer .text code { padding: 1px 5px; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); font: .9em var(--mono); }
+  .code { border-radius: 4px; background: #14181d; color: #e6ebf2; overflow: hidden; }
+  .codebar { display: flex; justify-content: space-between; gap: 10px; padding: 4px 12px; border-bottom: 1px solid #2a3140; color: #9fb0c0; font-size: .78rem; }
+  .codebar .link { color: #e6ebf2; }
+  .code pre { margin: 0; padding: 12px; overflow-x: auto; font: 13px/1.55 var(--mono); }
+  .why { margin: 26px 0 0; }
+  .why ul { margin: 0; padding-left: 18px; }
+  .why li { margin: 3px 0; }
+  .working b { font-weight: 650; }
+  .working span { display: block; color: var(--muted); font-size: .85rem; }
+
+  /* dashboard view */
+  .dash-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .dash-head h2 { margin: 0; font-size: 1.15rem; }
+  .dash-actions { display: flex; gap: 16px; }
+  .strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .cell { padding: 12px 14px; background: var(--panel); }
+  .cell .k { display: block; color: var(--muted); font-size: .8rem; }
+  .cell .n { display: block; font-size: 1.55rem; font-weight: 650; line-height: 1.25; font-variant-numeric: tabular-nums; }
+  .cell .n.c { color: var(--cheap); }
+  .cell .n.e { color: var(--exp); }
+  .cell .n.x { color: var(--bad); }
+
+  .block { margin-top: 30px; }
+  .split { display: flex; height: 12px; background: var(--line); border-radius: 2px; overflow: hidden; }
+  .split i { display: block; height: 100%; width: 0; }
+  .split .c { background: var(--cheap); }
+  .split .e { background: var(--exp); }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 8px; color: var(--muted); font-size: .88rem; font-variant-numeric: tabular-nums; }
+  .legend .sq { background: var(--cheap); }
+  .legend .sq.e { background: var(--exp); }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th { padding: 8px 12px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .8rem; font-weight: 600; text-align: left; white-space: nowrap; }
+  td { padding: 7px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { text-align: right; }
+  td.p { max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+  tbody.clickable tr { cursor: pointer; }
+  tbody.clickable tr:hover td { background: var(--hover); }
+  .t-cheap { color: var(--cheap); font-weight: 600; }
+  .t-expensive { color: var(--exp); font-weight: 600; }
+  .t-error { color: var(--bad); font-weight: 600; }
+  .emptyrow { padding: 18px 12px; color: var(--muted); }
+  .note { margin-top: 10px; color: var(--muted); font-size: .8rem; }
+
+  .foot { margin-top: 40px; color: var(--muted); font-size: .82rem; }
+  .foot code { font-family: var(--mono); }
+
+  @media (max-width: 900px) { .strip { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px) {
+    .router { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .top { padding: 0 14px; gap: 14px; }
+    main { padding: 20px 14px 60px; }
+  }
+  @media (max-width: 480px) {
+    .strip { grid-template-columns: repeat(2, 1fr); }
+    .status span { display: none; }
+  }
+</style>
 </head>
 <body>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="5" cy="14" r="3" fill="currentColor"/>
+      <path d="M8 14h3c4 0 4-7 9-7"/>
+      <path d="M11 14c4 0 4 7 9 7"/>
+      <circle cx="23" cy="7" r="2.5"/>
+      <circle cx="23" cy="21" r="2.5"/>
+    </svg>
+    RouteMesh
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" id="tabRouter" role="tab" aria-selected="true" aria-controls="viewRouter" type="button">Router</button>
+    <button class="tab" id="tabDash" role="tab" aria-selected="false" aria-controls="viewDash" type="button">Dashboard</button>
+  </nav>
+  <button class="status" id="backend" type="button" data-state="checking" title="Check the backend again"><i></i><span id="backendText">Checking backend…</span></button>
+</header>
+
 <main>
-  <h1>RouteMesh</h1>
-  <p class="sub">Ask a question to get an AI-generated answer plus RouteMesh's task, tier, confidence, and routing explanation.</p>
 
-  <label class="label" for="prompt">Your prompt</label>
-  <textarea id="prompt" placeholder="Ask a question, paste code, or describe a problem..." aria-label="Your prompt"></textarea>
-  <div class="row">
-    <button class="primary" id="go">Get answer &amp; route</button>
-    <button id="clear">Clear</button>
-  </div>
+  <!-- ROUTER -->
+  <section id="viewRouter" role="tabpanel" aria-labelledby="tabRouter">
+    <div class="router">
+      <div>
+        <label for="prompt">Prompt</label>
+        <textarea id="prompt" placeholder="Ask a question, paste code, or describe a problem…"></textarea>
+        <div class="formrow">
+          <button class="btn solid" id="go" type="button">Get answer</button>
+          <button class="link" id="clear" type="button">Clear</button>
+          <span class="hint">Ctrl or Cmd + Enter also sends</span>
+        </div>
+        <div id="status" role="status"></div>
 
-  <div class="label">Try an example</div>
-  <div class="row" id="examples">
-    <button class="chip" data-prompt="Write a Python function to sort a list">Python sorting</button>
-    <button class="chip" data-prompt="Explain what git rebase does in simple terms">Explain git rebase</button>
-    <button class="chip" data-prompt="I get KeyError: 'user_id' in my Python app. How do I debug it?">Debug an error</button>
-    <button class="chip" data-prompt="Design a scalable job queue and explain the main tradeoffs">System design</button>
-  </div>
+        <div class="examples">
+          <h2>Examples</h2>
+          <ul>
+            <li><button class="link" type="button" data-prompt="Write a Python function to sort a list">Write a Python function to sort a list</button></li>
+            <li><button class="link" type="button" data-prompt="Explain what git rebase does in simple terms">Explain what git rebase does</button></li>
+            <li><button class="link" type="button" data-prompt="bash one-liner to find files larger than 100MB">Bash one-liner for large files</button></li>
+            <li><button class="link" type="button" data-prompt="I get KeyError: 'user_id' in my Python app. How do I debug it?">Debug a KeyError</button></li>
+            <li><button class="link" type="button" data-prompt="Design a scalable job queue and explain the main tradeoffs">Design a scalable job queue</button></li>
+          </ul>
+        </div>
+      </div>
 
-  <div id="status" class="muted" role="status"></div>
-  <section id="error" class="card error" hidden aria-live="polite"></section>
+      <div aria-live="polite">
+        <p class="muted" id="empty">Nothing yet. Send a prompt and the result shows up here: which model was picked, how sure the router was, and why.</p>
 
-  <section id="result" class="card" hidden aria-live="polite">
-    <h2>Answer</h2>
-    <div id="answer" class="answer"></div>
-    <p class="muted">Generated by <strong id="answerModel">Ollama</strong></p>
-    <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
-    <h2>Routing result</h2>
-    <div class="metrics">
-      <div class="metric"><div class="k">Task detected</div><div class="v" id="task"></div></div>
-      <div class="metric"><div class="k">Selected tier</div><div class="v"><span class="pill" id="tier"></span></div></div>
-      <div class="metric"><div class="k">Router confidence</div><div class="v" id="confidence"></div><div class="bar"><i id="confidenceBar"></i></div></div>
+        <div class="errbox" id="error" hidden>
+          <h2>Couldn’t get a response</h2>
+          <p class="msg" id="errorMsg"></p>
+          <ul>
+            <li>Is Uvicorn running on port 8000?</li>
+            <li>Is Ollama running with both models pulled? <code>ollama list</code> will tell you.</li>
+          </ul>
+        </div>
+
+        <p class="working" id="working" hidden><b id="workingText">Routing your prompt…</b><span>The first request can take a minute while Ollama loads the model.</span></p>
+
+        <div id="result" hidden>
+          <dl class="facts">
+            <dt>Task</dt><dd id="task"></dd>
+            <dt>Tier</dt><dd><span class="sq"></span><span id="tier"></span></dd>
+            <dt>Confidence</dt><dd><span id="confidence"></span><span class="conf"><i id="confidenceBar"></i></span></dd>
+            <dt>Answered by</dt><dd id="answerModel"></dd>
+            <dt>Response time</dt><dd id="elapsed"></dd>
+          </dl>
+
+          <div class="ans-head"><h2>Answer</h2><button class="link" id="copyAnswer" type="button">Copy</button></div>
+          <div class="answer" id="answer"></div>
+
+          <div class="why">
+            <h2>Why this route was chosen</h2>
+            <ul id="reasons"></ul>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="label">Why this route was chosen</div>
-    <ul id="reasons"></ul>
   </section>
-  <p class="muted">Local setup: this page sends prompts to your FastAPI backend at <code>http://127.0.0.1:8000/predict</code>. Keep the backend and Ollama running while using it.</p>
+
+  <!-- DASHBOARD -->
+  <section id="viewDash" role="tabpanel" aria-labelledby="tabDash" hidden>
+    <div class="dash-head">
+      <h2>Dashboard</h2>
+      <div class="dash-actions">
+        <button class="link" id="exportCsv" type="button">Export CSV</button>
+        <button class="link" id="clearLog" type="button">Clear history</button>
+      </div>
+    </div>
+
+    <div class="strip">
+      <div class="cell"><span class="k">Total requests</span><span class="n" id="cTotal">0</span></div>
+      <div class="cell"><span class="k">Cheap tier</span><span class="n c" id="cCheap">0</span></div>
+      <div class="cell"><span class="k">Expensive tier</span><span class="n e" id="cExp">0</span></div>
+      <div class="cell"><span class="k">Avg confidence</span><span class="n" id="cConf">–</span></div>
+      <div class="cell"><span class="k">Avg response time</span><span class="n" id="cTime">–</span></div>
+      <div class="cell"><span class="k">Failed requests</span><span class="n x" id="cErr">0</span></div>
+    </div>
+
+    <div class="block">
+      <h2>How requests were split</h2>
+      <div class="split" aria-hidden="true"><i class="c" id="splitCheap"></i><i class="e" id="splitExp"></i></div>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <div class="block">
+      <h2>By task</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Task</th><th class="num">Requests</th><th class="num">Cheap</th><th class="num">Expensive</th><th class="num">Avg confidence</th></tr></thead>
+          <tbody id="tasksBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>Recent requests</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Time</th><th>Prompt</th><th>Task</th><th>Tier</th><th>Model</th><th class="num">Confidence</th><th class="num">Time</th></tr></thead>
+          <tbody id="logBody" class="clickable"></tbody>
+        </table>
+      </div>
+      <p class="note">Stats are saved in this browser only (last 500 requests). Click a row to reuse its prompt.</p>
+    </div>
+  </section>
+
+  <p class="foot">Talks to the FastAPI backend at <code>http://127.0.0.1:8000</code>. Keep it and Ollama running.</p>
 </main>
+
 <script>
-const BACKEND_URL = "http://127.0.0.1:8000/predict";
+const BACKEND = "http://127.0.0.1:8000";
+const PREDICT_URL = BACKEND + "/predict";
+const LOG_KEY = "routemesh.log.v1";
+const MAX_LOG = 500;
 const $ = id => document.getElementById(id);
 
+let busy = false;
+let lastAnswer = "";
+let timer = null;
+
+/* ---------- saved request log ---------- */
+function loadLog() {
+  try {
+    const raw = localStorage.getItem(LOG_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+let log = loadLog();
+
+function saveLog() {
+  try { localStorage.setItem(LOG_KEY, JSON.stringify(log)); } catch (e) { /* storage unavailable, keep in memory */ }
+}
+
+function addLog(entry) {
+  log.push(entry);
+  if (log.length > MAX_LOG) log.splice(0, log.length - MAX_LOG);
+  saveLog();
+  renderDash();
+}
+
+/* ---------- tabs ---------- */
+function showView(name) {
+  const dash = name === "dash";
+  $("viewRouter").hidden = dash;
+  $("viewDash").hidden = !dash;
+  $("tabRouter").setAttribute("aria-selected", String(!dash));
+  $("tabDash").setAttribute("aria-selected", String(dash));
+  if (dash) renderDash();
+}
+
+/* ---------- backend status ---------- */
+function setBackend(state, text) {
+  $("backend").dataset.state = state;
+  $("backendText").textContent = text;
+}
+
+async function checkBackend() {
+  setBackend("checking", "Checking backend…");
+  try {
+    const r = await fetch(BACKEND + "/", { headers: { "Accept": "application/json" } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    setBackend("online", "Backend online");
+  } catch (e) {
+    setBackend("offline", "Backend offline, click to retry");
+  }
+}
+
+/* ---------- helpers ---------- */
+async function copyText(text, btn) {
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    ok = true;
+  } catch (e) {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      ok = document.execCommand("copy");
+      ta.remove();
+    } catch (e2) { /* ignore */ }
+  }
+  const old = btn.textContent;
+  btn.textContent = ok ? "Copied" : "Copy failed";
+  setTimeout(() => { btn.textContent = old; }, 1400);
+}
+
+function renderInline(parent, text) {
+  for (const piece of text.split(/(`[^`\n]+`)/g)) {
+    if (!piece) continue;
+    if (/^`[^`\n]+`$/.test(piece)) {
+      const c = document.createElement("code");
+      c.textContent = piece.slice(1, -1);
+      parent.appendChild(c);
+    } else {
+      parent.appendChild(document.createTextNode(piece));
+    }
+  }
+}
+
+function renderAnswer(text) {
+  const box = $("answer");
+  box.replaceChildren();
+  text.split("```").forEach((part, i) => {
+    if (i % 2 === 1) {
+      let lang = "";
+      let code = part;
+      const nl = code.indexOf("\n");
+      if (nl !== -1) {
+        const first = code.slice(0, nl).trim();
+        if (/^[A-Za-z0-9_+#.-]{1,20}$/.test(first)) { lang = first; code = code.slice(nl + 1); }
+      }
+      code = code.replace(/^\n/, "").replace(/\n+$/, "");
+
+      const wrap = document.createElement("div");
+      wrap.className = "code";
+      const bar = document.createElement("div");
+      bar.className = "codebar";
+      const label = document.createElement("span");
+      label.textContent = lang || "code";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "link";
+      btn.textContent = "Copy";
+      btn.addEventListener("click", () => copyText(code, btn));
+      bar.append(label, btn);
+      const pre = document.createElement("pre");
+      const c = document.createElement("code");
+      c.textContent = code;
+      pre.appendChild(c);
+      wrap.append(bar, pre);
+      box.appendChild(wrap);
+    } else {
+      const trimmed = part.replace(/^\n+|\n+$/g, "");
+      if (!trimmed) return;
+      const div = document.createElement("div");
+      div.className = "text";
+      renderInline(div, trimmed);
+      box.appendChild(div);
+    }
+  });
+}
+
+function renderReasons(reasons) {
+  const list = $("reasons");
+  list.replaceChildren();
+  const items = reasons.length ? reasons : ["The router did not return any explanation."];
+  for (const r of items) {
+    const li = document.createElement("li");
+    li.textContent = String(r);
+    list.appendChild(li);
+  }
+}
+
+/* ---------- dashboard ---------- */
+function pct(n, total) { return total ? Math.round((n / total) * 100) : 0; }
+
+function cell(tr, text, cls) {
+  const td = document.createElement("td");
+  if (cls) td.className = cls;
+  td.textContent = text;
+  tr.appendChild(td);
+  return td;
+}
+
+function emptyRow(tbody, cols, text) {
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = cols;
+  td.className = "emptyrow";
+  td.textContent = text;
+  tr.appendChild(td);
+  tbody.appendChild(tr);
+}
+
+function renderDash() {
+  const ok = log.filter(e => e.ok);
+  const cheap = ok.filter(e => e.tier === "cheap").length;
+  const exp = ok.filter(e => e.tier === "expensive").length;
+  const errors = log.length - ok.length;
+  const avg = key => ok.length ? ok.reduce((s, e) => s + (Number(e[key]) || 0), 0) / ok.length : null;
+  const avgConf = avg("conf"), avgSec = avg("sec");
+
+  $("cTotal").textContent = log.length;
+  $("cCheap").textContent = cheap;
+  $("cExp").textContent = exp;
+  $("cConf").textContent = avgConf === null ? "–" : Math.round(avgConf * 100) + "%";
+  $("cTime").textContent = avgSec === null ? "–" : avgSec.toFixed(1) + "s";
+  $("cErr").textContent = errors;
+
+  // split bar
+  const routed = cheap + exp;
+  $("splitCheap").style.width = pct(cheap, routed) + "%";
+  $("splitExp").style.width = pct(exp, routed) + "%";
+  const legend = $("legend");
+  legend.replaceChildren();
+  if (!routed) {
+    legend.textContent = "No routed requests yet.";
+  } else {
+    const a = document.createElement("span");
+    const sa = document.createElement("span"); sa.className = "sq";
+    a.append(sa, "Cheap " + cheap + " (" + pct(cheap, routed) + "%)");
+    const b = document.createElement("span");
+    const sb = document.createElement("span"); sb.className = "sq e";
+    b.append(sb, "Expensive " + exp + " (" + pct(exp, routed) + "%)");
+    legend.append(a, b);
+  }
+
+  // by task
+  const byTask = {};
+  for (const e of ok) {
+    const t = byTask[e.task] || (byTask[e.task] = { n: 0, c: 0, x: 0, conf: 0 });
+    t.n++; if (e.tier === "cheap") t.c++; if (e.tier === "expensive") t.x++;
+    t.conf += Number(e.conf) || 0;
+  }
+  const tb = $("tasksBody");
+  tb.replaceChildren();
+  const tasks = Object.entries(byTask).sort((a, b) => b[1].n - a[1].n);
+  if (!tasks.length) emptyRow(tb, 5, "No data yet. Send a prompt on the Router tab.");
+  for (const [name, t] of tasks) {
+    const tr = document.createElement("tr");
+    cell(tr, name);
+    cell(tr, t.n, "num"); cell(tr, t.c, "num"); cell(tr, t.x, "num");
+    cell(tr, Math.round((t.conf / t.n) * 100) + "%", "num");
+    tb.appendChild(tr);
+  }
+
+  // recent requests
+  const lb = $("logBody");
+  lb.replaceChildren();
+  if (!log.length) emptyRow(lb, 7, "No requests yet.");
+  const fmt = { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" };
+  for (const e of log.slice(-50).reverse()) {
+    const tr = document.createElement("tr");
+    tr.title = e.ok ? "Click to reuse this prompt" : String(e.err || "Failed");
+    cell(tr, new Date(e.t).toLocaleString([], fmt));
+    cell(tr, e.prompt, "p");
+    cell(tr, e.ok ? e.task : "–");
+    cell(tr, e.ok ? e.tier : "error", e.ok ? "t-" + e.tier : "t-error");
+    cell(tr, e.ok ? e.model : "–");
+    cell(tr, e.ok ? Math.round((Number(e.conf) || 0) * 100) + "%" : "–", "num");
+    cell(tr, e.ok ? (Number(e.sec) || 0).toFixed(1) + "s" : "–", "num");
+    tr.addEventListener("click", () => {
+      $("prompt").value = e.prompt;
+      showView("router");
+      $("prompt").focus();
+    });
+    lb.appendChild(tr);
+  }
+}
+
+function csvCell(v) {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function exportCsv() {
+  if (!log.length) return;
+  const head = ["time", "prompt", "status", "task", "tier", "model", "confidence", "seconds", "error"];
+  const rows = log.map(e => [
+    new Date(e.t).toISOString(), e.prompt, e.ok ? "ok" : "error", e.task || "", e.tier || "",
+    e.model || "", e.ok ? e.conf : "", e.ok ? e.sec : "", e.err || ""
+  ]);
+  const csv = [head, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "routemesh-requests.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ---------- main flow ---------- */
+function renderResult(data, seconds) {
+  const tierRaw = String(data.tier ?? "").trim().toLowerCase();
+  const tierKey = tierRaw === "cheap" || tierRaw === "expensive" ? tierRaw : "unknown";
+  $("result").dataset.tier = tierKey;
+
+  const model = data.answer_model || "Ollama";
+  $("task").textContent = data.task ?? "Unknown";
+  $("tier").textContent = data.tier ?? "Unknown";
+  $("answerModel").textContent = model;
+  $("elapsed").textContent = seconds.toFixed(1) + "s";
+
+  const c = Number(data.confidence ?? 0);
+  const conf = Number.isFinite(c) ? Math.max(0, Math.min(1, c)) : 0;
+  const percent = Math.round(conf * 100);
+  $("confidence").textContent = percent + "%";
+  $("confidenceBar").style.width = percent + "%";
+
+  lastAnswer = data.answer || "";
+  renderAnswer(lastAnswer || "(The backend returned no answer.)");
+  renderReasons(Array.isArray(data.reasons) ? data.reasons : []);
+
+  $("empty").hidden = true;
+  $("result").hidden = false;
+  return { tier: tierKey, task: String(data.task ?? "unknown"), model, conf };
+}
+
+function startWorking() {
+  const t0 = Date.now();
+  $("workingText").textContent = "Routing your prompt…";
+  $("working").hidden = false;
+  timer = setInterval(() => {
+    $("workingText").textContent = "Routing and generating… " + Math.round((Date.now() - t0) / 1000) + "s";
+  }, 1000);
+}
+
+function stopWorking() {
+  clearInterval(timer);
+  timer = null;
+  $("working").hidden = true;
+}
+
 async function route() {
+  if (busy) return;
   const prompt = $("prompt").value.trim();
   if (!prompt) {
     $("prompt").focus();
@@ -94,13 +618,18 @@ async function route() {
     return;
   }
 
+  busy = true;
   $("error").hidden = true;
   $("result").hidden = true;
-  $("status").textContent = "Routing prompt and generating answer…";
+  $("empty").hidden = true;
+  $("status").textContent = "";
   $("go").disabled = true;
+  startWorking();
+  const t0 = performance.now();
+  const shortPrompt = prompt.replace(/\s+/g, " ").slice(0, 300);
 
   try {
-    const response = await fetch(BACKEND_URL, {
+    const response = await fetch(PREDICT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({ prompt })
@@ -108,50 +637,50 @@ async function route() {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(data.detail || `Backend returned HTTP ${response.status}`);
+      let detail = data.detail;
+      if (detail && typeof detail !== "string") detail = JSON.stringify(detail);
+      throw new Error(detail || "Backend returned HTTP " + response.status);
     }
 
-    $("answer").textContent = data.answer || "(The backend returned no answer.)";
-    $("answerModel").textContent = data.answer_model || "Ollama";
-    $("task").textContent = data.task ?? "Unknown";
-    $("tier").textContent = data.tier ?? "Unknown";
-
-    const confidence = Number(data.confidence ?? 0);
-    const percent = Math.max(0, Math.min(100, Math.round(confidence * 100)));
-    $("confidence").textContent = `${percent}%`;
-    $("confidenceBar").style.width = `${percent}%`;
-
-    const reasons = Array.isArray(data.reasons) ? data.reasons : [];
-    $("reasons").replaceChildren();
-    if (reasons.length) {
-      for (const reason of reasons) {
-        const li = document.createElement("li");
-        li.textContent = reason;
-        $("reasons").appendChild(li);
-      }
-    } else {
-      const li = document.createElement("li");
-      li.textContent = "The router did not return any explanation.";
-      $("reasons").appendChild(li);
-    }
-
-    $("result").hidden = false;
+    const seconds = (performance.now() - t0) / 1000;
+    const r = renderResult(data, seconds);
+    addLog({ t: Date.now(), prompt: shortPrompt, ok: true, task: r.task, tier: r.tier, model: r.model, conf: r.conf, sec: seconds });
+    setBackend("online", "Backend online");
     $("status").textContent = "Done.";
   } catch (error) {
-    $("error").textContent =
-      `Could not get a response from RouteMesh.\n\n${error.message}\n\nCheck that Uvicorn is running on port 8000 and Ollama is running, then try again.`;
+    const msg = error.message || String(error);
+    $("errorMsg").textContent = msg;
     $("error").hidden = false;
-    $("status").textContent = "";
+    addLog({ t: Date.now(), prompt: shortPrompt, ok: false, err: msg });
+    if (error instanceof TypeError) setBackend("offline", "Backend offline, click to retry");
   } finally {
+    stopWorking();
+    busy = false;
     $("go").disabled = false;
   }
 }
 
+/* ---------- events ---------- */
+$("tabRouter").addEventListener("click", () => showView("router"));
+$("tabDash").addEventListener("click", () => showView("dash"));
 $("go").addEventListener("click", route);
+$("backend").addEventListener("click", checkBackend);
+$("copyAnswer").addEventListener("click", () => copyText(lastAnswer, $("copyAnswer")));
+$("exportCsv").addEventListener("click", exportCsv);
+$("clearLog").addEventListener("click", () => {
+  if (!log.length) return;
+  if (confirm("Clear all saved request history from this browser?")) {
+    log = [];
+    saveLog();
+    renderDash();
+  }
+});
 $("clear").addEventListener("click", () => {
+  if (busy) return;
   $("prompt").value = "";
   $("result").hidden = true;
   $("error").hidden = true;
+  $("empty").hidden = false;
   $("status").textContent = "";
   $("prompt").focus();
 });
@@ -160,10 +689,14 @@ $("prompt").addEventListener("keydown", event => {
 });
 document.querySelectorAll("[data-prompt]").forEach(button => {
   button.addEventListener("click", () => {
+    if (busy) return;
     $("prompt").value = button.dataset.prompt;
     route();
   });
 });
+
+renderDash();
+checkBackend();
 </script>
 </body>
 </html>
